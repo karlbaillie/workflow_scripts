@@ -1,0 +1,29 @@
+#!/bin/bash
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+END='\033[0m'
+DATE_TIME=$(date +%Y%m%d_%H%M)
+
+cd ~/Downloads
+
+fail_and_quit() {
+  printf "${RED}FAILED${END}\n"
+  exit 1
+}
+
+create_contents() {
+    printf "Creating directory contents file...  "
+    tree -I archive > "./archive/$DATE_TIME.txt" || fail_and_quit
+    printf "${GREEN}COMPLETE${END}\n"
+}
+
+create_archive() {
+    printf "Creating archive...  "
+    tar --exclude="archive" -zcf "./archive/$DATE_TIME.tar.gz" ./* --remove-files || fail_and_quit
+    printf "${GREEN}COMPLETE${END}\n"
+}
+
+create_contents
+create_archive

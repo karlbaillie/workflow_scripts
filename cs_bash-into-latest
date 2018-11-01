@@ -1,0 +1,7 @@
+#!/bin/bash
+
+LATEST_CONTAINER=$(docker ps -l --format '{{.Names}}')
+RUNNING_FOR=$(docker ps -l --format '{{.RunningFor}}')
+
+printf "%s\n" "Bashing into $LATEST_CONTAINER (Created $RUNNING_FOR)..."
+docker exec -it $LATEST_CONTAINER /bin/bash
