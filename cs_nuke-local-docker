@@ -1,13 +1,17 @@
 #!/bin/bash
 
-printf 'Killing all running containers... '
-for i in $(docker ps | awk '{print $1}' | grep -vi container); do docker kill $i || break; done
-printf 'done\n'
+read -r -p "Are you sure you want to nuke all your docker containers and images? [y/N] " response
+response=${response,,}
+if [[ "$response" =~ ^(yes|y)$ ]]; then
+    printf 'Killing all running containers... '
+    for i in $(docker ps | awk '{print $1}' | grep -vi container); do docker kill $i || break; done
+    printf 'done\n'
 
-printf 'Clearing down all containers... '
-for i in $(docker ps --all | awk '{print $1}' | grep -vi container); do docker rm $i || break; done
-printf 'done\n'
+    printf 'Clearing down all containers... '
+    for i in $(docker ps --all | awk '{print $1}' | grep -vi container); do docker rm $i || break; done
+    printf 'done\n'
 
-printf 'Clearing down all images... '
-for i in $(docker images | awk '{print $3}' | grep -vi image); do docker rmi $i --force || break; done
-printf 'done\n'
+    printf 'Clearing down all images... '
+    for i in $(docker images | awk '{print $3}' | grep -vi image); do docker rmi $i --force || break; done
+    printf 'done\n'
+fi
