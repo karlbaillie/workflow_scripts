@@ -1,0 +1,19 @@
+#!/bin/bash
+#
+# This will take a cluster name and an aws-vault profile name and update your kube config
+#
+# Usage: ws_update-kube-config env-eco-usr cluster-name
+
+if [ $# -eq 0 ]
+  then
+    sed -n '3,5p' "$0" | tr -d '#'
+    exit 1
+fi
+
+command="aws-vault exec ${1} -- aws eks update-kubeconfig --region eu-west-1 --name ${2}"
+read -r -p "Execute: \"${command}\"? [y/N] " response
+response=$(echo "$response" | tr '[:upper:]' '[:lower:]')
+if [[ "$response" =~ ^(yes|y)$ ]]; then
+    result=$(${command})
+    echo ${result}
+fi
