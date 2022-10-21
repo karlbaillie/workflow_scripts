@@ -1,7 +1,9 @@
 #!/bin/bash
 
+set -e
+
 read -r -p "Are you sure you want to nuke all your docker containers and images? [y/N] " response
-response=${response,,}
+response=$(echo "$response" | tr '[:upper:]' '[:lower:]')
 if [[ "$response" =~ ^(yes|y)$ ]]; then
     printf 'Killing all running containers... '
     for i in $(docker ps | awk '{print $1}' | grep -vi container); do docker kill $i || break; done
