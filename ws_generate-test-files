@@ -1,0 +1,31 @@
+
+#!/bin/bash
+#
+# A script to generate any number of files with random names and contents
+#
+# Usage: generate-test-files.sh (No. of Files) (Size in MB) (Path To Destination)
+# Example: ./generate-test-files.sh 50 25 ./Folder
+#
+# (c) 2017, Karl Baillie <mail@karlbaillie.com>
+#
+
+if [ $# -eq 0 ]
+  then
+    sed -n '3,8p' "$0" | tr -d '#'
+    exit 1
+fi
+
+for i in $(seq 1 $1); do
+  FILENAME="TestFile_$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1).txt"
+  echo "Creating file $3/$FILENAME"
+  touch $3/$FILENAME
+  dd if=/dev/zero of=$3/$FILENAME bs=1M count=$2
+  if [[ $? != 0 ]]; then
+    echo "Failed to create $3/$FILENAME"
+    exit 1
+  fi
+done
+
+exit 0
+
+# EOF
