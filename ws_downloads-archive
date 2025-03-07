@@ -5,30 +5,111 @@ set -e
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
 END='\033[0m'
 DATE_TIME=$(date +%Y%m%d_%H%M)
+ARCHIVE_DIR="./archive"
+DRY_RUN=false
+
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        --dry-run) DRY_RUN=true ;;
+        -h|--help)
+            echo "Usage: ws_downloads-archive [OPTIONS]"
+            echo "Archive files in your Downloads folder"
+            echo ""
+            echo "Options:"
+            echo "  --dry-run    Show what would happen without making changes"
+            echo "  -h, --help   Show this help message"
+            exit 0
+            ;;
+        *) echo "Unknown parameter: $1"; exit 1 ;;
+    esac
+    shift
+done
+
+if $DRY_RUN; then
+    printf "%sDRY RUN MODE: No files will be deleted or archived%s\n" "${YELLOW}" "${END}"
+fi
+
+if ! command -v tree &> /dev/null; then
+    printf "%sWARNING: 'tree' command not found. Installing via Homebrew...%s\n" "${RED}" "${END}"
+    if command -v brew &> /dev/null; then
+        if $DRY_RUN; then
+            printf "Would install tree via Homebrew\n"
+        else
+            brew install tree
+        fi
+    else
+        printf "%sERROR: Homebrew not found. Please install tree manually or install Homebrew first.%s\n" "${RED}" "${END}"
+        printf "Visit https://brew.sh/ to install Homebrew\n"
+        exit 1
+    fi
+fi
+
+if [ ! -d "$ARCHIVE_DIR" ]; then
+    if $DRY_RUN; then
+        printf "Would create archive directory: %s\n" "$ARCHIVE_DIR"
+    else
+        printf "Creating archive directory...\n"
+        mkdir -p "$ARCHIVE_DIR"
+    fi
+fi
 
 fail_and_quit() {
-printf "${RED}FAILED${END}\n"
-exit 1
+    printf "%sFAILED%s\n" "${RED}" "${END}"
+    exit 1
 }
 
 create_contents() {
     printf "Creating directory contents file...  "
-    tree -I archive > "./archive/$DATE_TIME.txt" || fail_and_quit
-    printf "${GREEN}COMPLETE${END}\n"
+    if $DRY_RUN; then
+        printf "Would create file: %s\n" "${ARCHIVE_DIR}/${DATE_TIME}.txt"
+    else
+        tree -I archive > "${ARCHIVE_DIR}/${DATE_TIME}.txt" || fail_and_quit
+        printf "%sCOMPLETE%s\n" "${GREEN}" "${END}"
+    fi
 }
 
 create_archive() {
     printf "Creating archive...  "
-    tar --exclude-from=".archiveignore" -zcf "./archive/$DATE_TIME.tar.gz" ./* --remove-files || fail_and_quit
-    printf "${GREEN}COMPLETE${END}\n"
+    # Check if .archiveignore exists, create a default one if not
+    if [ ! -f ".archiveignore" ]; then
+        if $DRY_RUN; then
+            printf "Would create default .archiveignore file\n"
+        else
+            printf "Creating default .archiveignore file...\n"
+            echo "archive/" > .archiveignore
+        fi
+    fi
+
+    if $DRY_RUN; then
+        printf "Would archive files to: %s\n" "${ARCHIVE_DIR}/${DATE_TIME}.tar.gz"
+        printf "Files that would be archived:\n"
+        find . -type f -not -path "./archive/*" -not -path "./.archiveignore" | head -n 10
+        COUNT=$(find . -type f -not -path "./archive/*" -not -path "./.archiveignore" | wc -l)
+        if [ "$COUNT" -gt 10 ]; then
+            printf "%s... and %d more files%s\n" "${BLUE}" "$((COUNT - 10))" "${END}"
+        fi
+    else
+        tar --exclude-from=".archiveignore" -zcf "${ARCHIVE_DIR}/${DATE_TIME}.tar.gz" ./* --remove-files || fail_and_quit
+        printf "%sCOMPLETE%s\n" "${GREEN}" "${END}"
+    fi
 }
 
-read -r -p "Are you sure you want to archive your downloads folder? [y/N] " response
-response=$(echo "$response" | tr '[:upper:]' '[:lower:]')
-if [[ "$response" =~ ^(yes|y)$ ]]; then
+if $DRY_RUN; then
+    printf "Would change directory to: %s\n" "$HOME/Downloads"
     cd ~/Downloads
     create_contents
     create_archive
+    printf "\n%sDRY RUN COMPLETE: No files were modified%s\n" "${YELLOW}" "${END}"
+    printf "To perform the actual archive, run without the --dry-run flag\n"
+else
+    read -r -p "Are you sure you want to archive your downloads folder? [y/N] " response
+    response=$(echo "$response" | tr '[:upper:]' '[:lower:]')
+    if [[ "$response" =~ ^(yes|y)$ ]]; then
+        cd ~/Downloads
+        create_contents
+        create_archive
+    fi
 fi

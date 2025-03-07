@@ -15,5 +15,5 @@ read -r -p "Execute: \"${command}\"? [y/N] " response
 response=$(echo "$response" | tr '[:upper:]' '[:lower:]')
 if [[ "$response" =~ ^(yes|y)$ ]]; then
     result=$(${command})
-    echo ${result}
+    echo "${result}"
 fi

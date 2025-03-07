@@ -8,8 +8,8 @@ All scripts are prefixed with `ws_` to avoid clashing with any native binaries a
 
 ## Installation
 
-```
+```bash
 git clone git@github.com:karlbaillie/workflow_scripts.git $HOME/.local/workflow_scripts
-echo 'export PATH="$PATH:$HOME/.local/workflow_scripts"' >> ~/.zshrc
+echo "export PATH=\"\$PATH:\$HOME/.local/workflow_scripts\"" >> ~/.zshrc
 exec zsh
 ```

@@ -14,17 +14,14 @@ if [ $# -eq 0 ]
     exit 1
 fi
 
-for i in $(seq 1 $1); do
-  FILENAME="TestFile_$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1).txt"
+for _ in $(seq 1 "$1"); do
+  FILENAME="TestFile_$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 8 | head -n 1).txt"
   echo "Creating file $3/$FILENAME"
-  touch $3/$FILENAME
-  dd if=/dev/zero of=$3/$FILENAME bs=1M count=$2
-  if [[ $? != 0 ]]; then
+  touch "$3/$FILENAME"
+  if ! dd if=/dev/zero of="$3/$FILENAME" bs=1M count="$2"; then
     echo "Failed to create $3/$FILENAME"
     exit 1
   fi
 done
 
 exit 0
-
-# EOF
